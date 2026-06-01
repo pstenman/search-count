@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using SearchCount.Api.Clients;
+using SearchCount.Api.Infrastructure.Clients;
 using SearchCount.Api.Configuration;
 
-namespace SearchCount.Api.Clients.Extensions;
+namespace SearchCount.Api.Infrastructure.Clients.Extensions;
 
 public static class HttpClientRegistrationExtensions
 {

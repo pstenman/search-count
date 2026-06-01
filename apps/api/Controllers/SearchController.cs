@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SearchCount.Api.Services;
-using SearchCount.Api.Models;
+using SearchCount.Api.Core.Models;
 
 namespace SearchCount.Api.Controllers;
 

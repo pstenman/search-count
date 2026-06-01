@@ -1,6 +1,6 @@
 using SearchCount.Api.Configuration;
 using SearchCount.Api.Services;
-using SearchCount.Api.Clients.Extensions;
+using SearchCount.Api.Infrastructure.Clients.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

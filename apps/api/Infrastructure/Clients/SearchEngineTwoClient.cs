@@ -1,7 +1,7 @@
-using SearchCount.Api.Models.Providers;
+using SearchCount.Api.Infrastructure.Models;
 using System.Net.Http.Json;
 
-namespace SearchCount.Api.Clients;
+namespace SearchCount.Api.Infrastructure.Clients;
 
 public class SearchEngineTwoClient
 {

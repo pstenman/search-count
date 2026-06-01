@@ -1,5 +1,5 @@
-using SearchCount.Api.Clients;
-using SearchCount.Api.Models;
+using SearchCount.Api.Infrastructure.Clients;
+using SearchCount.Api.Core.Models;
 
 namespace SearchCount.Api.Services;
 

@@ -1,0 +1,11 @@
+{
+	"name": "search-count",
+	"private": true,
+	"scripts": {
+		"dev:web": "cd apps/web && npm run dev",
+		"build:web": "cd apps/web && npm run build",
+		"typecheck": "cd apps/web && npm run typecheck",
+		"check": "cd apps/web && npm run check",
+		"format": "cd apps/web && npm run format"
+	}
+}

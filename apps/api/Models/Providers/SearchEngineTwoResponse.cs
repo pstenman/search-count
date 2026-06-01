@@ -1,3 +1,3 @@
-namespace SearchCount.Api.Services.Providers.Models;
+namespace SearchCount.Api.Models.Providers;
 
 public sealed record SearchEngineTwoResponse(string Query, long TotalSearchHits);

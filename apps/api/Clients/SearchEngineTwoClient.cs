@@ -1,7 +1,7 @@
-using SearchCount.Api.Services.Providers.Models;
+using SearchCount.Api.Models.Providers;
 using System.Net.Http.Json;
 
-namespace SearchCount.Api.Services.Providers;
+namespace SearchCount.Api.Clients;
 
 public class SearchEngineTwoClient
 {
@@ -18,11 +18,7 @@ public class SearchEngineTwoClient
             "/api/ClassicSongSearchEngine",
             new { query });
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"SearchEngineTwo failed. Status: {response.StatusCode}");
-        }
+        response.EnsureSuccessStatusCode();
 
         var result =
             await response.Content.ReadFromJsonAsync<SearchEngineTwoResponse>();

@@ -1,8 +1,8 @@
-using SearchCount.Api.Services.Providers.Models;
+using SearchCount.Api.Models.Providers;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Net.Http.Json;
 
-namespace SearchCount.Api.Services.Providers;
+namespace SearchCount.Api.Clients;
 
 public class SearchEngineOneClient
 {
@@ -21,12 +21,7 @@ public class SearchEngineOneClient
             query);
 
         var response = await _http.GetAsync(url);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"SearchEngineOne failed. Status: {response.StatusCode}");
-        }
+        response.EnsureSuccessStatusCode();
 
         var result =
             await response.Content.ReadFromJsonAsync<SearchEngineOneResponse>();

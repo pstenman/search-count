@@ -25,10 +25,11 @@ obj/
 *.vs/
 
 # =====================
-# Environment
+# Environment / secrets
 # =====================
 .env
 .env.*
+apps/api/api.local.http
 
 # =====================
 # OS / IDE

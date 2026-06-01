@@ -1,6 +1,11 @@
 @api_HostAddress = http://localhost:5135
 
+### Health Check
 GET {{api_HostAddress}}/health
-Accept: application/json
+
+###
+
+### Search
+GET {{api_HostAddress}}/api/search?q=react
 
 ###

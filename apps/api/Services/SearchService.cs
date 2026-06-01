@@ -1,12 +1,16 @@
-using SearchCount.Api.Services.Providers;
+using SearchCount.Api.Clients;
 using SearchCount.Api.Models;
+
+namespace SearchCount.Api.Services;
 
 public class SearchService
 {
     private readonly SearchEngineOneClient _engineOne;
     private readonly SearchEngineTwoClient _engineTwo;
 
-    public SearchService(SearchEngineOneClient engineOne, SearchEngineTwoClient engineTwo)
+    public SearchService(
+        SearchEngineOneClient engineOne,
+        SearchEngineTwoClient engineTwo)
     {
         _engineOne = engineOne;
         _engineTwo = engineTwo;
@@ -20,10 +24,10 @@ public class SearchService
         await Task.WhenAll(engineOneTask, engineTwoTask);
 
         return new SearchResponse(
-          query,
-          [
-            new ProviderCount("engineOne", engineOneTask.Result),
-        new ProviderCount("engineTwo", engineTwoTask.Result)
-          ]);
+            query,
+            [
+                new ProviderCount("engineOne", await engineOneTask),
+                new ProviderCount("engineTwo", await engineTwoTask)
+            ]);
     }
 }

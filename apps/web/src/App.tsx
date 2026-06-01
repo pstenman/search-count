@@ -1,9 +1,16 @@
+import { SearchBox } from "./components/search/searchBox";
+
 function App() {
-  return (
-    <main>
-      <h1>Search Aggregator</h1>
-    </main>
-  );
+	const onSearch = (query: string) => {
+		console.log(query);
+	};
+
+	return (
+		<main>
+			<h1>Search Aggregator</h1>
+			<SearchBox onSearch={onSearch} />
+		</main>
+	);
 }
 
-export default App
+export default App;

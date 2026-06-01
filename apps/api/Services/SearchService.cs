@@ -23,11 +23,17 @@ public class SearchService
 
         await Task.WhenAll(engineOneTask, engineTwoTask);
 
-        return new SearchResponse(
-            query,
-            [
-                new ProviderCount("engineOne", await engineOneTask),
-                new ProviderCount("engineTwo", await engineTwoTask)
-            ]);
+        var engineOneResult = await engineOneTask;
+        var engineTwoResult = await engineTwoTask;
+
+        var results = new List<ProviderCount>
+    {
+        new("engineOne", engineOneResult),
+        new("engineTwo", engineTwoResult)
+    };
+
+        var total = engineOneResult + engineTwoResult;
+
+        return new SearchResponse(query, results, total);
     }
 }

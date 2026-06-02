@@ -7,6 +7,7 @@ dist
 dist-ssr
 .vite
 *.local
+*.tsbuildinfo
 
 # Logs
 logs

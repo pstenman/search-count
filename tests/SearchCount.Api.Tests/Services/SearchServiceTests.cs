@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SearchCount.Api.Core.Abstractions;
 using SearchCount.Api.Core.Models;
@@ -36,7 +37,11 @@ public class SearchServiceTests
         var tokenizer = new QueryTokenizer();
         var aggregator = new SearchResultAggregator();
 
-        var service = new SearchService(engines, tokenizer, aggregator);
+        var service = new SearchService(
+            engines,
+            tokenizer,
+            aggregator,
+            NullLogger<SearchService>.Instance);
 
         // Act
         var result = await service.SearchAsync("hello world");
@@ -51,7 +56,12 @@ public class SearchServiceTests
         engineTwo.Verify(e => e.SearchAsync("hello"), Times.Once);
         engineTwo.Verify(e => e.SearchAsync("world"), Times.Once);
 
-        result.TotalHits.Should().BeGreaterThan(0);
-        result.Results.Should().NotBeEmpty();
+        result.TotalHits.Should().Be(30);
+
+        result.Results.Should()
+            .Contain(x => x.Provider == "engineOne" && x.Count == 20);
+
+        result.Results.Should()
+            .Contain(x => x.Provider == "engineTwo" && x.Count == 10);
     }
 }

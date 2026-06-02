@@ -1,5 +1,7 @@
-using SearchCount.Api.Infrastructure.Clients;
 using SearchCount.Api.Core.Models;
+using SearchCount.Api.Infrastructure.Clients;
+using SearchCount.Api.Services.Aggregation;
+using SearchCount.Api.Services.Tokenazation;
 
 namespace SearchCount.Api.Services;
 
@@ -7,33 +9,40 @@ public class SearchService
 {
     private readonly SearchEngineOneClient _engineOne;
     private readonly SearchEngineTwoClient _engineTwo;
+    private readonly QueryTokenizer _tokenizer;
+    private readonly SearchResultAggregator _aggregator;
 
     public SearchService(
         SearchEngineOneClient engineOne,
-        SearchEngineTwoClient engineTwo)
+        SearchEngineTwoClient engineTwo,
+        QueryTokenizer tokenizer,
+        SearchResultAggregator aggregator)
     {
         _engineOne = engineOne;
         _engineTwo = engineTwo;
+        _tokenizer = tokenizer;
+        _aggregator = aggregator;
     }
 
     public async Task<SearchResponse> SearchAsync(string query)
     {
-        var engineOneTask = _engineOne.SearchAsync(query);
-        var engineTwoTask = _engineTwo.SearchAsync(query);
+        var terms = _tokenizer.Tokenize(query);
 
-        await Task.WhenAll(engineOneTask, engineTwoTask);
+        var tasks = terms.Select(async term =>
+        {
+            var engineOneHits = await _engineOne.SearchAsync(term);
+            var engineTwoHits = await _engineTwo.SearchAsync(term);
 
-        var engineOneResult = await engineOneTask;
-        var engineTwoResult = await engineTwoTask;
+            return new[]
+            {
+                new ProviderCount("engineOne", engineOneHits),
+                new ProviderCount("engineTwo", engineTwoHits)
+            };
+        });
 
-        var results = new List<ProviderCount>
-    {
-        new("engineOne", engineOneResult),
-        new("engineTwo", engineTwoResult)
-    };
+        var results = (await Task.WhenAll(tasks))
+            .SelectMany(x => x);
 
-        var total = engineOneResult + engineTwoResult;
-
-        return new SearchResponse(query, results, total);
+        return _aggregator.Aggregate(query, results);
     }
 }

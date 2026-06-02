@@ -1,6 +1,6 @@
 using SearchCount.Api.Configuration;
-using SearchCount.Api.Services;
-using SearchCount.Api.Infrastructure.Clients.Extensions;
+using SearchCount.Api.Application;
+using SearchCount.Api.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,12 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SearchProvidersConfig>(
     builder.Configuration.GetSection("SearchProviders"));
 
-// Http clients
-builder.Services.AddEngineOneClient();
-builder.Services.AddEngineTwoClient();
-
-// Services
-builder.Services.AddScoped<SearchService>();
+// Layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
 
 // MVC
 builder.Services.AddControllers();

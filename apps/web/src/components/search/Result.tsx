@@ -1,3 +1,8 @@
+import { formatHits } from "@/lib/utils";
+import { Text } from "../ui";
+import { EmptyState } from "./EmptyState";
+import { ResultSkeleton } from "./ResultSkeleton";
+
 type ResultProps = {
 	loading: boolean;
 	error: string | null;
@@ -5,13 +10,20 @@ type ResultProps = {
 };
 
 export function Result({ loading, error, hits }: ResultProps) {
-	if (loading) return <p>Loading...</p>;
+	if (loading) return <ResultSkeleton />;
 
-	if (error) return <p className="text-red-500">{error}</p>;
+	if (error) return <Text className="text-red-500">{error}</Text>;
 
-	if (hits === 0) return <p>No results</p>;
+	if (hits === null) return <EmptyState />;
 
-	if (hits !== null) return <p>Total hits: {hits}</p>;
-
-	return null;
+	return (
+		<div className="space-y-2">
+			<Text className="text-muted-foreground" size="base">
+				Total hits
+			</Text>
+			<Text className="font-semibold tracking-tight tabular-nums" size="xl">
+				{formatHits(hits)}
+			</Text>
+		</div>
+	);
 }

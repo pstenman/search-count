@@ -1,10 +1,11 @@
 import { useState } from "react";
 
 type SearchBoxProps = {
-	onSearch: (query: string) => void;
+	onSearch: (query: string) => Promise<void> | void;
+	isLoading?: boolean;
 };
 
-export const SearchBox = ({ onSearch }: SearchBoxProps) => {
+export const SearchBox = ({ onSearch, isLoading = false }: SearchBoxProps) => {
 	const [query, setQuery] = useState("");
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -18,8 +19,11 @@ export const SearchBox = ({ onSearch }: SearchBoxProps) => {
 				type="text"
 				value={query}
 				onChange={(e) => setQuery(e.target.value)}
+				disabled={isLoading}
 			/>
-			<button type="submit">Search</button>
+			<button type="submit" disabled={isLoading}>
+				Search
+			</button>
 		</form>
 	);
 };

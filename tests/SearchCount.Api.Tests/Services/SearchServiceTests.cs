@@ -6,6 +6,7 @@ using SearchCount.Api.Core.Models;
 using SearchCount.Api.Services;
 using SearchCount.Api.Services.Aggregation;
 using SearchCount.Api.Services.Tokenazation;
+using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
 namespace SearchCount.Api.Tests.Services;
@@ -36,12 +37,14 @@ public class SearchServiceTests
 
         var tokenizer = new QueryTokenizer();
         var aggregator = new SearchResultAggregator();
+        var cache = new MemoryCache(new MemoryCacheOptions());
 
         var service = new SearchService(
             engines,
             tokenizer,
             aggregator,
-            NullLogger<SearchService>.Instance);
+            NullLogger<SearchService>.Instance,
+            cache);
 
         // Act
         var result = await service.SearchAsync("hello world");

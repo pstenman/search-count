@@ -2,10 +2,15 @@
 	"name": "search-count",
 	"private": true,
 	"scripts": {
-		"dev:web": "cd apps/web && npm run dev",
-		"build:web": "cd apps/web && npm run build",
-		"typecheck": "cd apps/web && npm run typecheck",
-		"check": "cd apps/web && npm run check",
-		"format": "cd apps/web && npm run format"
+    "dev:api": "dotnet watch --project apps/api/api.csproj run",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev": "concurrently -n API,WEB -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "build:web": "npm --prefix apps/web run build",
+    "typecheck": "npm --prefix apps/web run typecheck",
+    "check": "npm --prefix apps/web run check",
+    "format": "npm --prefix apps/web run format"
+	},
+	"devDependencies": {
+		"concurrently": "^10.0.3"
 	}
 }

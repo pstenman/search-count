@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>48f8a076-98f9-4841-8e62-b28567a3871d</UserSecretsId>
+    <EnableDefaultStaticFiles>false</EnableDefaultStaticFiles>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>

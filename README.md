@@ -1,6 +1,6 @@
 # Search Count
 
-Aggregates search hit counts from two external providers via an ASP.NET Core API and a React UI.
+Aggregates search hit counts from two external search providers. A React UI submits queries to an ASP.NET Core API, which queries both engines and returns combined totals.
 
 ## Prerequisites
 
@@ -13,38 +13,28 @@ From the repository root:
 
 ```bash
 npm install
-npm --prefix apps/web install
-dotnet restore apps/api/api.csproj
+dotnet restore
 ```
 
-- **Root** — installs `concurrently` (used by `npm run dev`)
-- **Frontend** — `apps/web` dependencies
+- **Root** — `concurrently` (for `npm run dev`)
+- **Web** — `apps/web` dependencies
 - **API** — NuGet packages for `apps/api`
 
 ## How to run locally
 
-### Quick start (recommended)
-
-From the repository root:
+**Primary command** — from the repository root:
 
 ```bash
 npm run dev
 ```
 
-This uses [concurrently](https://www.npmjs.com/package/concurrently) to run both processes in one terminal with prefixed, color-labeled output (`API`, `WEB`):
+Starts the API (`dotnet watch`, `http://localhost:5135`) and Web (Vite, typically `http://localhost:5173`) in one terminal with labeled output (`API`, `WEB`). Open the URL Vite prints.
 
-| Process | Command | URL |
-| ------- | ------- | --- |
-| API | `dotnet watch` on `apps/api` | `http://localhost:5135` |
-| Web | Vite dev server | `http://localhost:5173` (typical) |
+Configure API tokens before searching — see [Environment / secrets setup](#environment--secrets-setup). Without them, engine calls fail.
 
-Open the URL Vite prints. The UI calls `/api/search` on the dev server.
+During development, the Vite dev server proxies `/api/*` to the API ([`apps/web/vite.config.ts`](apps/web/vite.config.ts)), so the browser calls same-origin `/api/search`.
 
-**Before searching:** configure API tokens in [Environment / secrets setup](#environment--secrets-setup) — without them, engine calls will fail.
-
-**Vite proxy:** requests to `/api/*` on the Vite port are forwarded to `http://localhost:5135`, so the browser uses same-origin `/api/search` during development (see [`apps/web/vite.config.ts`](apps/web/vite.config.ts)).
-
-### Manual mode (two terminals)
+### Manual fallback (two terminals)
 
 **Terminal 1 — API:**
 
@@ -59,17 +49,11 @@ dotnet run
 npm run dev:web
 ```
 
-Or from `apps/web`:
-
-```bash
-npm run dev
-```
+Or from `apps/web`: `npm run dev`
 
 ## Environment / secrets setup
 
-The API calls external search engines with an `x-api-token` header. Tokens are **not** checked into source control; configure them with [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) in the API project.
-
-From the repository root:
+The API authenticates to external search engines with an `x-api-token` header. Tokens are not in source control — set them with [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets):
 
 ```bash
 cd apps/api
@@ -78,78 +62,35 @@ dotnet user-secrets set "SearchProviders:EngineOne:Token" "<engine-one-token>"
 dotnet user-secrets set "SearchProviders:EngineTwo:Token" "<engine-two-token>"
 ```
 
-Use the API tokens supplied for the Voyado test task. Both engines share the same base URL in [`appsettings.json`](apps/api/appsettings.json), but each has its own secret key — set `EngineOne` and `EngineTwo` tokens independently (they may differ).
+Use the API tokens supplied for the Voyado test task. Both engines share the same base URL in [`appsettings.json`](apps/api/appsettings.json); set `EngineOne` and `EngineTwo` tokens independently.
 
-Verify secrets are stored (values are hidden in the list output):
+Verify (values hidden in output):
 
 ```bash
 dotnet user-secrets list
 ```
 
-Base URLs for the engines live in [`apps/api/appsettings.json`](apps/api/appsettings.json) under `SearchProviders`; only the tokens belong in user secrets.
-
----
+Engine base URLs live in [`apps/api/appsettings.json`](apps/api/appsettings.json) under `SearchProviders`; only tokens belong in user secrets.
 
 ## Tech stack
 
-**API**
+**API** — ASP.NET Core 10, Serilog (console), `IMemoryCache`, `Microsoft.Extensions.Http.Resilience`
 
-- ASP.NET Core 10
-- Serilog (console)
-- `IMemoryCache`
-- `Microsoft.Extensions.Http.Resilience` (HTTP client retries)
+**Web** — React 19, Vite 8, TypeScript, Tailwind CSS 4, Biome
 
-**Web**
-
-- React 19, Vite 8, TypeScript
-- Tailwind CSS 4, Biome
-
-**Tooling**
-
-- `concurrently` at repo root (`npm run dev`)
+**Tooling** — `concurrently` at repo root
 
 ## Architecture overview
 
-```mermaid
-sequenceDiagram
-  participant UI as React_Vite
-  participant API as SearchController
-  participant Svc as SearchService
-  participant E1 as EngineOne_HTTP
-  participant E2 as EngineTwo_HTTP
-  UI->>API: GET /api/search?q via proxy
-  API->>Svc: SearchAsync
-  Svc->>Svc: tokenize cache lookup
-  par per term and engine
-    Svc->>E1: Altavista GET
-    Svc->>E2: ClassicSong POST
-  end
-  Svc->>Svc: aggregate
-  Svc-->>API: SearchResponse
-  API-->>UI: JSON
-```
-
-**API layout** (`apps/api`):
-
-- `Controllers` — HTTP endpoints
-- `Services` / `Application` — `SearchService`, tokenization, aggregation
-- `Infrastructure` — HTTP clients for each engine
-- `Core` — `ISearchEngineClient`, models
-
-**External engines** (configured in `appsettings.json`):
-
-- **Engine one** — `GET /api/AltavistaSearchEngine?query={term}`
-- **Engine two** — `POST /api/ClassicSongSearchEngine` with `{ "query": "{term}" }`
+A React + Vite frontend talks to an ASP.NET Core API, which calls two external search engines. The user enters a query in the UI; the API tokenizes it, fetches hit counts from both engines per token, caches results, and returns aggregated totals to the UI.
 
 ## Key features
 
 - **Tokenization** — query split on whitespace; each term queried against both engines in parallel
-- **Aggregation** — counts summed per provider (`engineOne`, `engineTwo`); `totalHits` is the sum across providers
-- **Caching** — `IMemoryCache`, 5-minute TTL; key `search:{terms sorted and joined by |}`; cache hit/miss logged
-- **Logging** — Serilog to console with timestamp/level template and `Application` property ([`Program.cs`](apps/api/Program.cs))
-- **Resilience**
-  - HTTP clients: standard resilience handler — 3 retries, 2s delay between attempts
-  - Per engine/term failure: logged, count treated as `0`; HTTP 200 still returned with partial results
+- **Aggregation** — per-provider counts (`engineOne`, `engineTwo`); `totalHits` is the sum
+- **Caching** — `IMemoryCache`, 5-minute TTL; key `search:{terms sorted and joined by |}`; hit/miss logged
+- **Logging** — Serilog to console ([`Program.cs`](apps/api/Program.cs))
+- **Resilience** — HTTP clients retry 3 times (2s delay); per engine/term failures logged as `0`; HTTP 200 with partial results
 - **UI** — search input, loading skeleton, total hits or error message
 
 ## API documentation
@@ -168,7 +109,7 @@ Response: `{ "status": "ok" }`
 curl "http://localhost:5135/api/search?q=hello%20world"
 ```
 
-Via Vite proxy (with dev servers running):
+Via Vite proxy (dev servers running):
 
 ```bash
 curl "http://localhost:5173/api/search?q=hello%20world"
@@ -206,13 +147,7 @@ REST examples for IDE clients: [`apps/api/api.http`](apps/api/api.http).
 From the repository root:
 
 ```bash
-dotnet test tests/SearchCount.Api.Tests/SearchCount.Api.Tests.csproj
+dotnet test
 ```
 
-**Coverage:**
-
-- `QueryTokenizer` — whitespace splitting
-- `SearchResultAggregator` — per-provider sums and total
-- `SearchService` — mocked engines, tokenization and aggregation flow
-
-Uses xUnit, Moq, and FluentAssertions.
+Unit tests cover `QueryTokenizer`, `SearchResultAggregator`, and `SearchService` using mocked search engines. Built with xUnit, Moq, and FluentAssertions.

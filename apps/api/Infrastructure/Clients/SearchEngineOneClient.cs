@@ -1,12 +1,15 @@
+using SearchCount.Api.Core.Abstractions;
 using SearchCount.Api.Infrastructure.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Net.Http.Json;
 
 namespace SearchCount.Api.Infrastructure.Clients;
 
-public class SearchEngineOneClient
+public class SearchEngineOneClient : ISearchEngineClient
 {
     private readonly HttpClient _http;
+
+    public string ProviderName => "engineOne";
 
     public SearchEngineOneClient(HttpClient http)
     {

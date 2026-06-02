@@ -1,5 +1,5 @@
+using SearchCount.Api.Core.Abstractions;
 using SearchCount.Api.Core.Models;
-using SearchCount.Api.Infrastructure.Clients;
 using SearchCount.Api.Services.Aggregation;
 using SearchCount.Api.Services.Tokenazation;
 
@@ -7,19 +7,16 @@ namespace SearchCount.Api.Services;
 
 public class SearchService
 {
-    private readonly SearchEngineOneClient _engineOne;
-    private readonly SearchEngineTwoClient _engineTwo;
+    private readonly IEnumerable<ISearchEngineClient> _engines;
     private readonly QueryTokenizer _tokenizer;
     private readonly SearchResultAggregator _aggregator;
 
     public SearchService(
-        SearchEngineOneClient engineOne,
-        SearchEngineTwoClient engineTwo,
+        IEnumerable<ISearchEngineClient> engines,
         QueryTokenizer tokenizer,
         SearchResultAggregator aggregator)
     {
-        _engineOne = engineOne;
-        _engineTwo = engineTwo;
+        _engines = engines;
         _tokenizer = tokenizer;
         _aggregator = aggregator;
     }
@@ -28,21 +25,24 @@ public class SearchService
     {
         var terms = _tokenizer.Tokenize(query);
 
-        var tasks = terms.Select(async term =>
-        {
-            var engineOneHits = await _engineOne.SearchAsync(term);
-            var engineTwoHits = await _engineTwo.SearchAsync(term);
+        var tasks =
+            from term in terms
+            from engine in _engines
+            select SearchProviderAsync(engine, term);
 
-            return new[]
-            {
-                new ProviderCount("engineOne", engineOneHits),
-                new ProviderCount("engineTwo", engineTwoHits)
-            };
-        });
-
-        var results = (await Task.WhenAll(tasks))
-            .SelectMany(x => x);
+        var results = await Task.WhenAll(tasks);
 
         return _aggregator.Aggregate(query, results);
+    }
+
+    private static async Task<ProviderCount> SearchProviderAsync(
+        ISearchEngineClient engine,
+        string term)
+    {
+        var hits = await engine.SearchAsync(term);
+
+        return new ProviderCount(
+            engine.ProviderName,
+            hits);
     }
 }

@@ -1,68 +1,33 @@
 import { useState } from "react";
+import { Result } from "./components/search/Result";
 import { SearchBox } from "./components/search/SearchBox";
-
-type ProviderCount = {
-	provider: string;
-	count: number;
-};
-
-type SearchResponse = {
-	query: string;
-	results: ProviderCount[];
-	totalHits: number;
-};
+import { search } from "./services/searchApi";
 
 function App() {
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState("");
-	const [data, setData] = useState<SearchResponse | null>(null);
+	const [hits, setHits] = useState<number | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-	const onSearch = async (query: string) => {
-		const trimmedQuery = query.trim();
-		if (!trimmedQuery) {
-			setError("Please enter a search query.");
-			setData(null);
-			return;
-		}
-
-		setIsLoading(true);
-		setError("");
-
+	async function handleSearch(q: string) {
 		try {
-			const response = await fetch(
-				`/api/search?q=${encodeURIComponent(trimmedQuery)}`,
-			);
+			setLoading(true);
+			setError(null);
 
-			if (!response.ok) {
-				throw new Error(`Search request failed with status ${response.status}`);
-			}
+			const data = await search(q);
 
-			const payload = (await response.json()) as SearchResponse;
-			setData(payload);
-		} catch (err) {
-			const message =
-				err instanceof Error ? err.message : "Something went wrong.";
-			setError(message);
-			setData(null);
+			setHits(data.totalHits);
+		} catch {
+			setError("Something went wrong");
 		} finally {
-			setIsLoading(false);
+			setLoading(false);
 		}
-	};
+	}
 
 	return (
-		<main>
-			<h1>Search Aggregator</h1>
-			<SearchBox onSearch={onSearch} isLoading={isLoading} />
-			{isLoading && <p>Loading...</p>}
-			{error && <p>{error}</p>}
-			{data && (
-				<section>
-					<h2>Results</h2>
-					<p>Query: {data.query}</p>
-					<p>Total Hits: {data.totalHits}</p>
-				</section>
-			)}
-		</main>
+		<div className="max-w-md mx-auto mt-10 space-y-4">
+			<SearchBox onSearch={handleSearch} isLoading={loading} />
+			<Result loading={loading} error={error} hits={hits} />
+		</div>
 	);
 }
 

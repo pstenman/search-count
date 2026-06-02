@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { SearchIcon } from "lucide-react";
+import { type SubmitEvent, useState } from "react";
+import { Button, Input } from "@/components/ui";
 
 type SearchBoxProps = {
 	onSearch: (query: string) => Promise<void> | void;
@@ -8,22 +10,25 @@ type SearchBoxProps = {
 export const SearchBox = ({ onSearch, isLoading = false }: SearchBoxProps) => {
 	const [query, setQuery] = useState("");
 
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		onSearch(query);
+		const trimmed = query.trim();
+		if (!trimmed) return;
+
+		onSearch(trimmed);
 	};
 
 	return (
 		<form onSubmit={handleSubmit}>
-			<input
-				type="text"
+			<Input
 				value={query}
 				onChange={(e) => setQuery(e.target.value)}
-				disabled={isLoading}
+				placeholder="Search..."
 			/>
-			<button type="submit" disabled={isLoading}>
-				Search
-			</button>
+
+			<Button type="submit" disabled={isLoading || !query.trim()}>
+				<SearchIcon className="size-4" />
+			</Button>
 		</form>
 	);
 };

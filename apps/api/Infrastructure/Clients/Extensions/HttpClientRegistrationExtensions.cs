@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using SearchCount.Api.Infrastructure.Clients;
 using SearchCount.Api.Configuration;
 using SearchCount.Api.Core.Abstractions;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace SearchCount.Api.Infrastructure.Clients.Extensions;
 
@@ -18,6 +19,11 @@ public static class HttpClientRegistrationExtensions
 
                 client.BaseAddress = new Uri(cfg.BaseUrl);
                 client.DefaultRequestHeaders.Add("x-api-token", cfg.Token);
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromSeconds(2);
             });
 
         services.AddTransient<ISearchEngineClient>(sp =>
@@ -36,6 +42,11 @@ public static class HttpClientRegistrationExtensions
 
                 client.BaseAddress = new Uri(cfg.BaseUrl);
                 client.DefaultRequestHeaders.Add("x-api-token", cfg.Token);
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromSeconds(2);
             });
 
         services.AddTransient<ISearchEngineClient>(sp =>

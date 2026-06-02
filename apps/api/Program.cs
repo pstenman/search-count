@@ -14,27 +14,39 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Logging
+builder.Host.UseSerilog();
+
 // Cache
 builder.Services.AddMemoryCache();
 
-// Logging
-builder.Host.UseSerilog();
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 // Config
 builder.Services.Configure<SearchProvidersConfig>(
     builder.Configuration.GetSection("SearchProviders"));
 
-// Layers
+// Application / Infrastructure
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
-// MVC
+// API
 builder.Services.AddControllers();
-
 var app = builder.Build();
 
+// Middleware
+app.UseCors("DevCors");
 app.MapControllers();
-
 app.MapGet("/health", () =>
     Results.Ok(new { status = "ok" }));
 

@@ -1,6 +1,7 @@
 using SearchCount.Api.Configuration;
 using SearchCount.Api.Application;
 using SearchCount.Api.Infrastructure;
+using Microsoft.Extensions.Caching.Memory;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -12,6 +13,9 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cache
+builder.Services.AddMemoryCache();
 
 // Logging
 builder.Host.UseSerilog();

@@ -1,8 +1,20 @@
 using SearchCount.Api.Configuration;
 using SearchCount.Api.Application;
 using SearchCount.Api.Infrastructure;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "SearchCount.Api")
+    .WriteTo.Console(
+        outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging
+builder.Host.UseSerilog();
 
 // Config
 builder.Services.Configure<SearchProvidersConfig>(

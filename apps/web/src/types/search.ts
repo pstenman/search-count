@@ -1,10 +1,10 @@
 export type ProviderCount = {
-	provider: string;
-	count: number;
+  provider: string;
+  count: number;
 };
 
 export type SearchResponse = {
-	query: string;
-	results: ProviderCount[];
-	totalHits: number;
+  query: string;
+  results: ProviderCount[];
+  totalHits: number;
 };

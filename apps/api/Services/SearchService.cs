@@ -84,10 +84,25 @@ public class SearchService
         ISearchEngineClient engine,
         string term)
     {
-        var hits = await engine.SearchAsync(term);
+        try
+        {
+            var hits = await engine.SearchAsync(term);
 
-        return new ProviderCount(
-            engine.ProviderName,
-            hits);
+            return new ProviderCount(
+                engine.ProviderName,
+                hits);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Engine {Engine} failed for term '{Term}'",
+                engine.ProviderName,
+                term);
+
+            return new ProviderCount(
+                engine.ProviderName,
+                0);
+        }
     }
 }
